@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Calendar Idle Empire - Profiles & Bank Time Stamps Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            DEFAULT: '#FFD700',
+                            light: '#FFF099',
+                            dark: '#B8860B',
+                        },
+                        cyber: {
+                            dark: '#040408',
+                            card: '#0c0d1a',
+                            border: '#1a1c38',
+                            accent: '#7928CA'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #040408;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        
+        .glow-text-gold {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+        .glow-text-cyan {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .glow-text-electric {
+            text-shadow: 0 0 12px rgba(14, 165, 233, 0.9), 0 0 25px rgba(168, 85, 247, 0.9);
+        }
+
+        /* Electrified Shock Ring for Active Days */
+        .active-day-electric {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(14, 165, 233, 0.35) 100%);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 10px rgba(56, 189, 248, 0.8), inset 0 0 14px rgba(255, 215, 0, 0.6);
+            border: 2px solid #00f0ff !important;
+            animation: shockPulse 1.2s infinite alternate;
+        }
+
+        @keyframes shockPulse {
+            0% {
+                border-color: #FFD700;
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.8), inset 0 0 6px rgba(255, 215, 0, 0.5);
+            }
+            50% {
+                border-color: #38bdf8;
+                box-shadow: 0 0 20px rgba(56, 189, 248, 0.9), inset 0 0 12px rgba(56, 189, 248, 0.7);
+            }
+            100% {
+                border-color: #e879f9;
+                box-shadow: 0 0 24px rgba(232, 121, 249, 0.9), inset 0 0 16px rgba(255, 215, 0, 0.9);
+            }
+        }
+
+        /* Full Screen Electrified Shock Flash overlay when finishing a whole month */
+        .shock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+            background: radial-gradient(circle, rgba(56,189,248,0.45) 0%, rgba(168,85,247,0.55) 50%, rgba(0,0,0,0.9) 100%);
+            mix-blend-mode: screen;
+            animation: flashElectrified 0.7s ease-out forwards;
+        }
+
+        @keyframes flashElectrified {
+            0% { opacity: 0; transform: scale(0.95); }
+            20% { opacity: 1; transform: scale(1.03); }
+            40% { opacity: 0.3; }
+            60% { opacity: 0.95; }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        /* Floating numbers over calendar days */
+        .floating-num {
+            position: absolute;
+            pointer-events: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 0.85rem;
+            animation: floatUp 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 60;
+            text-shadow: 0 0 8px rgba(0,0,0,0.95);
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.9); }
+            50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.7); }
+        }
+
+        /* Voice Speech Animation Indicator */
+        .speaking-glow {
+            animation: voiceGlow 0.5s infinite alternate;
+        }
+        @keyframes voiceGlow {
+            0% { box-shadow: 0 0 5px #FFD700; }
+            100% { box-shadow: 0 0 20px #00f0ff, 0 0 30px #e879f9; }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #040408;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1a1c38;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FFD700;
+        }
+
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 90;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Fireworks Canvas Layer -->
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- Fullscreen Electrified Shock Effect Element -->
+    <div id="shockEffectContainer" class="hidden"></div>
+
+    <!-- Offline Earnings Report Modal Dialog Box (Closes on Backdrop Click) -->
+    <div id="offlineModal" onclick="handleBackdropClick(event)" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div id="offlineModalContent" class="bg-cyber-card border-2 border-yellow-400 p-6 rounded-2xl max-w-md w-full shadow-2xl relative">
+            <button onclick="closeOfflineModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-2 border-2 border-cyan-300 shadow-lg glow-text-gold">
+                    <i class="fa-solid fa-gift text-2xl text-black"></i>
+                </div>
+                <h2 class="font-orbitron text-xl font-black text-yellow-300 glow-text-gold tracking-wider">OFFLINE REWARDS CLAIMED!</h2>
+                <p id="offlineTimeText" class="text-xs text-cyan-300 font-semibold mt-1">Nakalipas habang wala ka: 0 seconds</p>
+            </div>
+
+            <div class="bg-cyber-dark p-4 rounded-xl border border-cyber-border space-y-2 mb-4 text-sm font-orbitron">
+                <div class="flex justify-between items-center text-yellow-400 border-b border-cyber-border/40 pb-1">
+                    <span>🥇 Golds:</span> <strong id="off-golds" class="text-white">+0</strong>
+                </div>
+                <div class="flex justify-between items-center text-emerald-400 border-b border-cyber-border/40 pb-1">
+                    <span>🍎 Foods:</span> <strong id="off-foods" class="text-white">+0</strong>
+                </div>
+                <div class="flex justify-between items-center text-green-400 border-b border-cyber-border/40 pb-1">
+                    <span>💵 Bills:</span> <strong id="off-bills" class="text-white">+0</strong>
+                </div>
+                <div class="flex justify-between items-center text-amber-300 border-b border-cyber-border/40 pb-1">
+                    <span>🪙 Coins:</span> <strong id="off-coins" class="text-white">+0</strong>
+                </div>
+                <div class="flex justify-between items-center text-amber-400 border-b border-cyber-border/40 pb-1">
+                    <span>🪙 Cents:</span> <strong id="off-cents" class="text-white">+0</strong>
+                </div>
+                <div class="flex justify-between items-center text-cyan-300 pt-1 font-bold">
+                    <span>💰 Total Asset Value:</span> <strong id="off-total" class="text-yellow-300 glow-text-gold">+$0</strong>
+                </div>
+            </div>
+
+            <button onclick="closeOfflineModal()" class="w-full py-3 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black font-orbitron font-black text-sm rounded-xl border border-yellow-200 shadow-lg hover:brightness-110 active:scale-95 transition">
+                ⚡ CLAIM & CONTINUE IDLE EMPIRE!
+            </button>
+        </div>
+    </div>
+
+    <!-- Header & Realtime Clock -->
+    <header class="bg-cyber-card border-b border-cyber-border sticky top-0 z-40 backdrop-blur-md bg-opacity-95 px-4 py-3 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-gradient-to-br from-yellow-400 via-amber-600 to-purple-600 rounded-xl shadow-lg text-black relative">
+                    <i class="fa-solid fa-bolt text-2xl text-yellow-200 animate-pulse"></i>
+                    <i id="voicePulseIcon" class="fa-solid fa-comment-dots absolute -top-1 -right-1 text-xs text-cyan-300 hidden"></i>
+                </div>
+                <div>
+                    <!-- Dynamic Header Title Changing Year Automatically -->
+                    <h1 id="appMainTitle" class="font-orbitron font-extrabold text-xl md:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-cyan-400 to-purple-400">
+                        2026 CALENDAR IDLE EMPIRE
+                    </h1>
+                    <p class="text-xs text-cyan-400 font-semibold tracking-wide">
+                        🗣️ AI VOICE NARRATION • 🏦 PROFILES & BANK TIME STAMPS
+                    </p>
+                </div>
+            </div>
+
+            <!-- Realtime Clock -->
+            <div class="bg-cyber-dark px-5 py-2.5 rounded-xl border border-cyber-border flex items-center gap-4 shadow-inner">
+                <div class="text-right">
+                    <div id="liveDate" class="text-xs text-amber-400 font-orbitron font-semibold">---, -- ---- ----</div>
+                    <div id="liveTime" class="text-lg md:text-xl font-orbitron font-bold text-white tracking-widest glow-text-cyan">
+                        00:00:00.<span id="liveMs" class="text-xs text-cyan-400">000</span>
+                    </div>
+                </div>
+                <div class="border-l border-gray-700 pl-4 text-xs text-gray-400">
+                    <div>Wk: <span id="liveWeek" class="text-white font-bold">--</span></div>
+                    <div>Yr: <span id="liveYear" class="text-amber-400 font-bold">2026</span></div>
+                </div>
+            </div>
+
+            <!-- Global Action Controls -->
+            <div class="flex items-center gap-2">
+                <!-- Sound Effects Toggle -->
+                <button id="audioToggleBtn" onclick="toggleAudio()" class="px-3 py-2 bg-gray-900 hover:bg-gray-800 text-yellow-400 border border-amber-500/40 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                    <i id="audioIcon" class="fa-solid fa-volume-high text-amber-400"></i>
+                    <span id="audioStatus">SFX ON</span>
+                </button>
+                <!-- AI Voice Toggle -->
+                <button id="voiceToggleBtn" onclick="toggleVoice()" class="px-3 py-2 bg-purple-950/80 hover:bg-purple-900 text-cyan-300 border border-purple-500/50 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                    <i id="voiceIcon" class="fa-solid fa-robot text-purple-300"></i>
+                    <span id="voiceStatus">AI VOICE ON</span>
+                </button>
+                <button onclick="resetDataPrompt()" class="px-3 py-2 bg-red-950/70 hover:bg-red-900 text-red-300 border border-red-800/40 rounded-lg text-xs font-semibold transition">
+                    <i class="fa-solid fa-rotate-right"></i> Reset
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <main class="max-w-7xl w-full mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+        
+        <!-- Left Sidebar: Vault Resources & Bank Stats -->
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            
+            <!-- Overall Grand Total Asset Card -->
+            <div class="bg-cyber-card border border-cyber-border p-5 rounded-2xl shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-cyan-400 pointer-events-none">
+                    <i class="fa-solid fa-vault text-9xl"></i>
+                </div>
+
+                <h2 class="font-orbitron text-xs font-bold text-amber-400 tracking-wider mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-coins mr-2"></i> TOTAL EMPIRE ASSETS</span>
+                    <span id="multiplierBadge" class="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/40">1.0x Speed</span>
+                </h2>
+
+                <div class="my-3">
+                    <div id="grandTotalDisplay" class="font-orbitron text-2xl md:text-3xl font-black text-white glow-text-gold tracking-tight break-all">
+                        $0.00
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1 flex justify-between">
+                        <span>Generation Rate:</span>
+                        <span id="ratePerSecDisplay" class="text-emerald-400 font-bold">+0.00 /sec</span>
+                    </div>
+                </div>
+
+                <div class="bg-cyber-dark/80 rounded-xl p-3 border border-cyber-border/60 flex justify-between items-center text-xs">
+                    <span class="text-gray-400">Total Activated Days:</span>
+                    <span id="activeDaysCount" class="font-orbitron font-bold text-yellow-400 text-sm">0 Days</span>
+                </div>
+            </div>
+
+            <!-- Vault Inventory Display -->
+            <div class="bg-cyber-card border border-cyber-border p-5 rounded-2xl shadow-xl flex-grow flex flex-col justify-between">
+                <h3 class="font-orbitron text-xs font-bold text-gray-400 tracking-widest uppercase mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-cubes text-cyan-400"></i> Vault Inventory Tickers</span>
+                    <span id="speechStatusIndicator" class="text-[10px] text-purple-400 font-bold animate-pulse hidden">🗣️ Speaking...</span>
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3" id="resourceVaultGrid">
+                    
+                    <!-- Coins -->
+                    <div class="bg-cyber-dark p-3 rounded-xl border border-yellow-500/20 hover:border-yellow-500/60 transition cursor-pointer" onmouseenter="speakPhrase('I LOVE POLYGAMY!')" onclick="speakPhrase('I LOVE GOLD!', true)">
+                        <div class="flex items-center justify-between text-xs text-yellow-400 font-bold mb-1">
+                            <span>🪙 Coins</span>
+                            <span id="coinsPerSec" class="text-[10px] text-gray-500">+0/s</span>
+                        </div>
+                        <div id="val-coins" class="font-orbitron font-extrabold text-lg text-white truncate">0</div>
+                    </div>
+
+                    <!-- Cents -->
+                    <div class="bg-cyber-dark p-3 rounded-xl border border-amber-600/20 hover:border-amber-600/60 transition cursor-pointer" onmouseenter="speakPhrase('I LOVE POLYGAMY!')" onclick="speakPhrase('GOOD JOB!', true)">
+                        <div class="flex items-center justify-between text-xs text-amber-300 font-bold mb-1">
+                            <span>🪙 Cents</span>
+                            <span id="centsPerSec" class="text-[10px] text-gray-500">+0/s</span>
+                        </div>
+                        <div id="val-cents" class="font-orbitron font-extrabold text-lg text-white truncate">0</div>
+                    </div>
+
+                    <!-- Golds -->
+                    <div class="bg-cyber-dark p-3 rounded-xl border border-yellow-400/30 hover:border-yellow-400/80 transition cursor-pointer" onmouseenter="speakPhrase('I LOVE POLYGAMY!')" onclick="speakPhrase('I LOVE GOLD!', true)">
+                        <div class="flex items-center justify-between text-xs text-yellow-300 font-bold mb-1">
+                            <span>🥇 Golds</span>
+                            <span id="goldsPerSec" class="text-[10px] text-gray-500">+0/s</span>
+                        </div>
+                        <div id="val-golds" class="font-orbitron font-extrabold text-lg text-white truncate">0</div>
+                    </div>
+
+                    <!-- Gems -->
+                    <div class="bg-cyber-dark p-3 rounded-xl border border-cyan-500/20 hover:border-cyan-500/60 transition cursor-pointer" onmouseenter="speakPhrase('I LOVE POLYGAMY!')" onclick="speakPhrase('GOOD JOB!', true)">
+                        <div class="flex items-center justify-between text-xs text-cyan-300 font-bold mb-1">
+                            <span>💎 Gems</span>
+                            <span id="gemsPerSec" class="text-[10px] text-gray-500">+0/s</span>
+                        </div>
+                        <div id="val-gems" class="font-orbitron font-extrabold text-lg text-white truncate">0</div>
+                    </div>
+
+                    <!-- Foods -->
+                    <div class="bg-cyber-dark p-3 rounded-xl border border-emerald-500/20 hover:border-emerald-500/60 transition cursor-pointer" onmouseenter="speakPhrase('I LOVE POLYGAMY!')" onclick="speakPhrase('DELICIOUS! I LOVE ALL THE FOODS!', true)">
+                        <div class="flex items-center justify-between text-xs text-emerald-300 font-bold mb-1">
+                            <span>🍎 Foods</span>
+                            <span id="foodsPerSec" class="text-[10px] text-gray-500">+0/s</span>
+                        </div>
+                        <div id="val-foods" class="font-orbitron font-extrabold text-lg text-white truncate">0</div>
+                    </div>
+
+                    <!-- Bills -->
+                    <div class="bg-cyber-dark p-3 rounded-xl border border-green-500/20 hover:border-green-500/60 transition cursor-pointer" onmouseenter="speakPhrase('I LOVE POLYGAMY!')" onclick="speakPhrase('I LOVE POLYGAMY!', true)">
+                        <div class="flex items-center justify-between text-xs text-green-400 font-bold mb-1">
+                            <span>💵 Bills</span>
+                            <span id="billsPerSec" class="text-[10px] text-gray-500">+0/s</span>
+                        </div>
+                        <div id="val-bills" class="font-orbitron font-extrabold text-lg text-white truncate">0</div>
+                    </div>
+
+                </div>
+
+                <!-- Milestone Scale Banner -->
+                <div class="mt-4 p-3 bg-gradient-to-r from-purple-900/40 via-indigo-900/40 to-cyan-900/40 border border-purple-500/30 rounded-xl">
+                    <div class="flex justify-between text-xs font-bold text-purple-300 mb-1">
+                        <span>Current Milestone Level:</span>
+                        <span id="milestoneName" class="text-amber-300">Hundreds</span>
+                    </div>
+                    <div class="w-full bg-gray-900 h-2 rounded-full overflow-hidden">
+                        <div id="milestoneProgressBar" class="bg-gradient-to-r from-cyan-400 via-amber-400 to-purple-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+                        <span>Next Tier:</span>
+                        <span id="nextMilestoneTarget" class="font-orbitron text-gray-300">100</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Milestone Log & Activity Feed -->
+            <div class="bg-cyber-card border border-cyber-border p-4 rounded-2xl h-36 overflow-hidden flex flex-col">
+                <div class="text-xs font-bold text-amber-400 font-orbitron mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-trophy mr-1"></i> BROADCAST & VOICE LOG</span>
+                    <span class="text-[10px] text-cyan-400">Live AI Voices</span>
+                </div>
+                <div id="milestoneLog" class="text-xs space-y-1.5 overflow-y-auto pr-1 flex-grow font-mono text-gray-300">
+                    <div class="text-gray-500 italic">Click calendar days to activate continuous high-speed generation with AI voices!</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Side: Interactive Calendar Interface & Bank Ledger -->
+        <section class="lg:col-span-8 bg-cyber-card border border-cyber-border p-5 rounded-2xl shadow-2xl flex flex-col justify-between">
+            
+            <!-- Navigation View Switcher (Calendar vs Bank Ledger) -->
+            <div class="flex justify-between items-center mb-4 border-b border-cyber-border/80 pb-3">
+                <div class="flex items-center gap-2">
+                    <button id="tabCalendarBtn" onclick="switchView('calendar')" class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-orbitron font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 transition flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days"></i> CALENDAR ENGINE
+                    </button>
+                    <button id="tabBankBtn" onclick="switchView('bank')" class="px-4 py-2 bg-cyber-dark hover:bg-gray-800 text-cyan-400 border border-cyan-500/40 font-orbitron font-extrabold text-xs rounded-xl transition flex items-center gap-2" onmouseenter="speakPhrase('I LOVE POLYGAMY!')">
+                        <i class="fa-solid fa-building-columns text-yellow-400"></i> PROFILES, BANK & TIME STAMPS
+                    </button>
+                </div>
+                <div class="text-xs font-bold text-amber-300 font-orbitron hidden sm:block">
+                    ⚡ 0.0% Bank Fee • 100% Net Yield
+                </div>
+            </div>
+
+            <!-- VIEW 1: CALENDAR SECTION -->
+            <div id="calendarViewSection" class="flex flex-col justify-between flex-grow">
+                <!-- Calendar Month & Year Controls -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pb-4 border-b border-cyber-border">
+                    
+                    <div class="flex items-center gap-3">
+                        <button onclick="changeMonth(-1)" class="w-10 h-10 bg-cyber-dark hover:bg-cyan-500/20 hover:text-cyan-400 text-gray-300 border border-cyber-border rounded-xl flex items-center justify-center transition active:scale-95">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <div class="text-center sm:text-left min-w-[200px]">
+                            <h2 id="currentMonthYear" class="font-orbitron text-2xl font-black text-white glow-text-gold tracking-wide">
+                                JANUARY 2026
+                            </h2>
+                            <div class="text-xs text-cyan-400 font-semibold" id="monthSubtext">
+                                ⚡ Electrified shock triggers upon 100% month completion!
+                            </div>
+                        </div>
+                        <button onclick="changeMonth(1)" class="w-10 h-10 bg-cyber-dark hover:bg-cyan-500/20 hover:text-cyan-400 text-gray-300 border border-cyber-border rounded-xl flex items-center justify-center transition active:scale-95">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Year Fast Jump Controls -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-gray-400 font-orbitron">YEAR:</label>
+                        <div class="flex items-center bg-cyber-dark border border-cyber-border rounded-xl p-1">
+                            <button onclick="changeYear(-1)" class="px-2 py-1 hover:text-amber-400 text-xs font-bold"><i class="fa-solid fa-minus"></i></button>
+                            <span id="calendarYearSelect" class="font-orbitron font-extrabold text-amber-400 px-3 text-sm">2026</span>
+                            <button onclick="changeYear(1)" class="px-2 py-1 hover:text-amber-400 text-xs font-bold"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <button onclick="jumpToCurrent2026()" class="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-amber-300 border border-yellow-500/40 rounded-xl text-xs font-orbitron font-bold transition">
+                            Reset 2026
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Quick Action Toolbar -->
+                <div class="flex flex-wrap justify-between items-center gap-2 my-3 text-xs">
+                    <div class="flex gap-2">
+                        <button onclick="activateAllDaysInMonth()" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg font-bold transition flex items-center gap-1.5 active:scale-95">
+                            <i class="fa-solid fa-bolt text-yellow-400 animate-pulse"></i> Complete Month (Shock Next!)
+                        </button>
+                        <button onclick="clearCurrentMonthDays()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg font-bold transition">
+                            Clear Month
+                        </button>
+                    </div>
+                    <div class="text-purple-300/90 text-[11px] font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-volume-high text-yellow-400"></i> Hover active days to hear "I LOVE POLYGAMY!"
+                    </div>
+                </div>
+
+                <!-- Days of Week Header -->
+                <div class="grid grid-cols-7 gap-2 text-center text-xs font-orbitron font-extrabold text-amber-400 py-2 border-b border-cyber-border/40">
+                    <div class="text-red-400">SUN</div>
+                    <div>MON</div>
+                    <div>TUE</div>
+                    <div>WED</div>
+                    <div>THU</div>
+                    <div>FRI</div>
+                    <div class="text-cyan-400">SAT</div>
+                </div>
+
+                <!-- Calendar Days Grid Container -->
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2 my-3 flex-grow min-h-[360px] relative">
+                    <!-- Days auto-populated by JavaScript -->
+                </div>
+
+                <!-- Footer Quick Stats -->
+                <div class="pt-3 border-t border-cyber-border flex flex-wrap justify-between items-center text-xs text-gray-400 gap-2">
+                    <div class="flex items-center gap-4">
+                        <span><i class="fa-solid fa-circle text-cyan-400 text-[8px] mr-1"></i> Active Month Days: <strong class="text-white" id="monthActiveStats">0/31</strong></span>
+                        <span><i class="fa-solid fa-fire text-yellow-500 text-[10px] mr-1"></i> Global Multiplier: <strong id="globalMultDisplay" class="text-yellow-400">1.0x</strong></span>
+                    </div>
+                    <div class="text-[11px] text-gray-400 italic">
+                        ⚡ Auto-saves every tick. Offline gains active.
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: BANK LEDGER, PROFILES & TRANSACTION HISTORY SECTION -->
+            <div id="bankViewSection" class="hidden flex-col justify-between flex-grow">
+                
+                <!-- PROFILE MANAGER BAR -->
+                <div class="bg-cyber-dark p-4 rounded-xl border border-yellow-500/30 mb-4 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-cyber-border pb-3">
+                        <div>
+                            <h3 class="font-orbitron font-black text-lg text-yellow-400 glow-text-gold">
+                                <i class="fa-solid fa-users mr-2"></i> BANK PROFILES MANAGER
+                            </h3>
+                            <p class="text-xs text-gray-400">Switch profile names, track individual bank history time stamps & persistent assets.</p>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <input id="newProfileInput" type="text" placeholder="Enter Profile Name..." class="bg-cyber-card border border-cyber-border text-white text-xs px-3 py-2 rounded-lg font-orbitron focus:outline-none focus:border-yellow-400 w-full sm:w-48" />
+                            <button onclick="createNewProfile()" class="px-3 py-2 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-orbitron font-extrabold text-xs rounded-lg shadow hover:brightness-110 shrink-0">
+                                + Add Profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Profiles List Buttons -->
+                    <div class="flex flex-wrap items-center gap-2" id="profilesContainer">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Bank Transaction History Table -->
+                <div class="bg-cyber-dark/80 rounded-xl border border-cyber-border p-3 flex-grow flex flex-col justify-between">
+                    <div class="text-xs font-orbitron font-extrabold text-cyan-400 mb-2 flex justify-between items-center border-b border-cyber-border pb-2">
+                        <span><i class="fa-solid fa-list-check mr-1"></i> ACTIVE BANK TIME STAMPS & HISTORICAL TIMELINE</span>
+                        <span id="currentProfileTitle" class="text-amber-300 font-bold">Profile: Default Empire</span>
+                    </div>
+
+                    <div id="bankHistoryList" class="space-y-2 overflow-y-auto max-h-[300px] pr-2 flex-grow text-xs font-mono">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-between items-center text-xs text-gray-400 pt-2 border-t border-cyber-border">
+                    <span>Hover over any transaction entry to activate voice response!</span>
+                    <button onclick="switchView('calendar')" class="px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-amber-300 rounded border border-yellow-500/40 font-orbitron font-bold">
+                        ← Back to Calendar
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-cyber-dark border-t border-cyber-border py-3 text-center text-xs text-gray-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>
+                © Real-time Infinite Electrified Calendar & AI Voice Idle Empire
+            </div>
+            <div class="flex gap-4">
+                <span class="text-amber-400 font-bold"><i class="fa-solid fa-bolt"></i> Speed: 20 Ticks/Sec</span>
+                <span class="text-cyan-400 font-bold"><i class="fa-solid fa-floppy-disk"></i> Auto LocalSaved</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Complete Application Logic Script -->
+    <script>
+        /* ==========================================================================
+           1. GAME STATE & CONSTANTS WITH MULTI-PROFILE SUPPORT
+           ========================================================================== */
+        const STORAGE_KEY = "2026_ELECTRIFIED_VOICE_CALENDAR_IDLE_EMPIRE_PROFILES_DATA";
+        
+        // Multi-Profile Container Structure
+        let masterData = {
+            activeProfileId: "default",
+            profiles: {
+                "default": {
+                    id: "default",
+                    name: "Default Empire",
+                    activeDays: {},
+                    timestamps: {}, // Stores exact creation timestamp for each date
+                    resources: { coins: 0, cents: 0, golds: 0, gems: 0, foods: 0, bills: 0 },
+                    totalEarned: 0,
+                    lastTickTime: Date.now(),
+                    milestoneIndex: 0,
+                    maxCompletedYear: 2026
+                }
+            },
+            audioMuted: false,
+            voiceMuted: false
+        };
+
+        // Active pointer reference to current profile
+        let state = masterData.profiles["default"];
+
+        const MILESTONES = [
+            { name: "Hundreds", target: 100 },
+            { name: "Thousands", target: 1000 },
+            { name: "Millions", target: 1000000 },
+            { name: "Billions", target: 1000000000 },
+            { name: "Trillions", target: 1000000000000 },
+            { name: "Quadrillions", target: 1000000000000000 },
+            { name: "Quintillions", target: 1e18 },
+            { name: "Sextillions", target: 1e21 },
+            { name: "Septillions", target: 1e24 },
+            { name: "Octillions", target: 1e27 },
+            { name: "Nonillions", target: 1e30 },
+            { name: "Decillions", target: 1e33 },
+            { name: "Centillions", target: 1e303 }
+        ];
+
+        let viewYear = 2026;
+        let viewMonth = 0;
+
+        const MONTH_NAMES = [
+            "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+            "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+        ];
+
+        /* Update header title dynamically based on max completed year */
+        function updateHeaderTitleYear() {
+            const displayYear = Math.max(viewYear, state.maxCompletedYear || 2026);
+            document.getElementById("appMainTitle").textContent = displayYear + " CALENDAR IDLE EMPIRE";
+        }
+
+        /* ==========================================================================
+           2. WEB SPEECH API & SYNTHESIZED SOUND AUDIO ENGINE
+           ========================================================================== */
+        let audioCtx = null;
+        let speechSynth = window.speechSynthesis || null;
+        let lastVoiceTime = 0;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        /* AI Voice Speech Synthesizer Function */
+        function speakPhrase(phrase, priority = false) {
+            if (masterData.voiceMuted || !speechSynth) return;
+            const now = Date.now();
+            
+            if (!priority && (now - lastVoiceTime < 1200)) return;
+            lastVoiceTime = now;
+
+            try {
+                if (priority) speechSynth.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(phrase);
+                utterance.rate = 1.15;
+                utterance.pitch = 1.2;
+                utterance.volume = 1.0;
+
+                const voices = speechSynth.getVoices();
+                if (voices.length > 0) {
+                    const selectedVoice = voices.find(v => v.lang.includes('en') && v.name.includes('Google')) || voices[0];
+                    utterance.voice = selectedVoice;
+                }
+
+                document.getElementById("speechStatusIndicator").classList.remove("hidden");
+                document.getElementById("voicePulseIcon").classList.remove("hidden");
+
+                utterance.onend = () => {
+                    document.getElementById("speechStatusIndicator").classList.add("hidden");
+                    document.getElementById("voicePulseIcon").classList.add("hidden");
+                };
+
+                speechSynth.speak(utterance);
+            } catch (e) {
+                console.warn("Speech API error:", e);
+            }
+        }
+
+        /* Web Audio API Metallic Gold Clinks & Custom SFX */
+        function playSound(type) {
+            if (masterData.audioMuted) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.04);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'goldClink') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1800, now);
+                    osc.frequency.exponentialRampToValueAtTime(3200, now + 0.08);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'foodCrunch') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'activate') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.05);
+                    osc.frequency.setValueAtTime(783.99, now + 0.10);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'shock') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.linearRampToValueAtTime(880, now + 0.1);
+                    osc.frequency.linearRampToValueAtTime(200, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'milestone') {
+                    const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+                    notes.forEach((freq, index) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.type = 'sine';
+                        noteOsc.frequency.setValueAtTime(freq, now + index * 0.07);
+                        noteGain.gain.setValueAtTime(0.2, now + index * 0.07);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.07 + 0.45);
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+                        noteOsc.start(now + index * 0.07);
+                        noteOsc.stop(now + index * 0.07 + 0.45);
+                    });
+                }
+            } catch (e) {
+                console.warn("Audio Context Error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            masterData.audioMuted = !masterData.audioMuted;
+            const btnText = document.getElementById("audioStatus");
+            const btnIcon = document.getElementById("audioIcon");
+            if (masterData.audioMuted) {
+                btnText.textContent = "SFX OFF";
+                btnIcon.className = "fa-solid fa-volume-xmark text-gray-400";
+            } else {
+                btnText.textContent = "SFX ON";
+                btnIcon.className = "fa-solid fa-volume-high text-amber-400";
+                playSound('click');
+            }
+            saveState();
+        }
+
+        function toggleVoice() {
+            masterData.voiceMuted = !masterData.voiceMuted;
+            const btnText = document.getElementById("voiceStatus");
+            const btnIcon = document.getElementById("voiceIcon");
+            if (masterData.voiceMuted) {
+                btnText.textContent = "VOICE OFF";
+                btnIcon.className = "fa-solid fa-microphone-slash text-gray-400";
+                if (speechSynth) speechSynth.cancel();
+            } else {
+                btnText.textContent = "AI VOICE ON";
+                btnIcon.className = "fa-solid fa-robot text-purple-300";
+                speakPhrase("GOOD JOB!", true);
+            }
+            saveState();
+        }
+
+        /* ==========================================================================
+           3. LOCALSTORAGE, PROFILES & OFFLINE GENERATOR CALCULATOR
+           ========================================================================== */
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    masterData = { ...masterData, ...parsed };
+                }
+            } catch (e) {
+                console.error("Failed loading local storage", e);
+            }
+
+            // Ensure active profile exists
+            if (!masterData.profiles[masterData.activeProfileId]) {
+                masterData.activeProfileId = Object.keys(masterData.profiles)[0] || "default";
+            }
+            state = masterData.profiles[masterData.activeProfileId];
+            if (!state.timestamps) state.timestamps = {};
+            if (!state.maxCompletedYear) state.maxCompletedYear = 2026;
+
+            const now = Date.now();
+            const elapsedSeconds = Math.max(0, (now - (state.lastTickTime || now)) / 1000);
+            if (elapsedSeconds > 2) {
+                calculateOfflineProgress(elapsedSeconds);
+            }
+            state.lastTickTime = now;
+            updateHeaderTitleYear();
+        }
+
+        function saveState() {
+            try {
+                state.lastTickTime = Date.now();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(masterData));
+            } catch (e) {
+                console.error("Failed saving local storage", e);
+            }
+        }
+
+        /* Profile Switching & Creation Logic */
+        function renderProfilesUI() {
+            const container = document.getElementById("profilesContainer");
+            container.innerHTML = "";
+
+            for (let pid in masterData.profiles) {
+                const prof = masterData.profiles[pid];
+                const isActive = pid === masterData.activeProfileId;
+
+                const wrapper = document.createElement("div");
+                wrapper.className = `flex items-center gap-1 rounded-lg p-1 border transition ${isActive ? 'bg-yellow-500/20 border-yellow-400 text-yellow-300' : 'bg-cyber-card border-cyber-border text-gray-400 hover:border-gray-500'}`;
+                
+                const btn = document.createElement("button");
+                btn.className = "px-3 py-1 font-orbitron text-xs font-bold transition flex items-center gap-2";
+                btn.innerHTML = `<i class="fa-solid fa-user-gear"></i> ${prof.name}`;
+                btn.onclick = () => switchProfile(pid);
+
+                wrapper.appendChild(btn);
+
+                // Allow deletion if more than 1 profile exists
+                if (Object.keys(masterData.profiles).length > 1) {
+                    const delBtn = document.createElement("button");
+                    delBtn.className = "px-1.5 py-0.5 text-red-400 hover:text-red-200 text-xs font-bold rounded hover:bg-red-900/40";
+                    delBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+                    delBtn.title = "Delete Profile History";
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteProfile(pid);
+                    };
+                    wrapper.appendChild(delBtn);
+                }
+
+                container.appendChild(wrapper);
+            }
+
+            document.getElementById("currentProfileTitle").textContent = `Profile: ${state.name}`;
+        }
+
+        function createNewProfile() {
+            const input = document.getElementById("newProfileInput");
+            const name = input.value.trim();
+            if (!name) return;
+
+            const id = 'prof_' + Date.now();
+            masterData.profiles[id] = {
+                id: id,
+                name: name,
+                activeDays: {},
+                timestamps: {},
+                resources: { coins: 0, cents: 0, golds: 0, gems: 0, foods: 0, bills: 0 },
+                totalEarned: 0,
+                lastTickTime: Date.now(),
+                milestoneIndex: 0,
+                maxCompletedYear: 2026
+            };
+
+            input.value = "";
+            switchProfile(id);
+            speakPhrase("NEW PROFILE CREATED FOR " + name + "! GOOD JOB!", true);
+        }
+
+        function switchProfile(id) {
+            if (!masterData.profiles[id]) return;
+            masterData.activeProfileId = id;
+            state = masterData.profiles[id];
+            if (!state.timestamps) state.timestamps = {};
+            if (!state.maxCompletedYear) state.maxCompletedYear = 2026;
+
+            playSound('click');
+            saveState();
+            renderProfilesUI();
+            renderCalendar();
+            updateHeaderTitleYear();
+        }
+
+        function deleteProfile(id) {
+            if (confirm(`Sigurado ka bang buburahin ang Profile history na ito?`)) {
+                delete masterData.profiles[id];
+                if (masterData.activeProfileId === id) {
+                    masterData.activeProfileId = Object.keys(masterData.profiles)[0];
+                    state = masterData.profiles[masterData.activeProfileId];
+                }
+                saveState();
+                renderProfilesUI();
+                renderCalendar();
+                updateHeaderTitleYear();
+                speakPhrase("PROFILE DELETED!");
+            }
+        }
+
+        function resetDataPrompt() {
+            if (confirm("Sigurado ka bang gusto mong i-reset ang lahat ng profiles, voice controls at active days?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        function calculateOfflineProgress(seconds) {
+            const activeCount = Object.keys(state.activeDays).length;
+            if (activeCount === 0) return;
+
+            const mult = 1 + (activeCount * 0.15);
+            const baseRates = {
+                coins: Math.floor(30 * activeCount * mult * seconds),
+                cents: Math.floor(150 * activeCount * mult * seconds),
+                golds: Math.floor(15 * activeCount * mult * seconds),
+                gems: Math.floor(8 * activeCount * mult * seconds),
+                foods: Math.floor(25 * activeCount * mult * seconds),
+                bills: Math.floor(20 * activeCount * mult * seconds)
+            };
+
+            let addedTotal = 0;
+            for (let key in baseRates) {
+                const amount = baseRates[key];
+                state.resources[key] = (state.resources[key] || 0) + amount;
+                addedTotal += amount;
+            }
+            state.totalEarned += addedTotal;
+
+            // Populate Offline Dialog Box Values
+            document.getElementById("offlineTimeText").textContent = `Nakalipas habang wala ka: ${seconds.toFixed(0)} seconds (${(seconds / 60).toFixed(1)} mins)`;
+            document.getElementById("off-golds").textContent = `+${formatNumber(baseRates.golds)}`;
+            document.getElementById("off-foods").textContent = `+${formatNumber(baseRates.foods)}`;
+            document.getElementById("off-bills").textContent = `+${formatNumber(baseRates.bills)}`;
+            document.getElementById("off-coins").textContent = `+${formatNumber(baseRates.coins)}`;
+            document.getElementById("off-cents").textContent = `+${formatNumber(baseRates.cents)}`;
+            document.getElementById("off-total").textContent = `+$${formatNumber(addedTotal)}`;
+
+            // Show Dialog Box Modal
+            document.getElementById("offlineModal").classList.remove("hidden");
+
+            // Play Audio SFX Burst & Speak Exact Requested Phrases
+            setTimeout(() => {
+                playSound('goldClink');
+                setTimeout(() => playSound('foodCrunch'), 150);
+                setTimeout(() => playSound('goldClink'), 300);
+                speakPhrase("WELCOME BACK! LOOK AT ALL THESE GOLD AND FOOD REWARDS! I LOVE GOLD! DELICIOUS!", true);
+            }, 300);
+
+            logMilestone(`⚡ Offline Idle Earnings: Added +$${formatNumber(addedTotal)} assets across ${seconds.toFixed(0)} seconds!`);
+        }
+
+        function handleBackdropClick(event) {
+            const modalContent = document.getElementById("offlineModalContent");
+            if (!modalContent.contains(event.target)) {
+                closeOfflineModal();
+            }
+        }
+
+        function closeOfflineModal() {
+            playSound('click');
+            playSound('activate');
+            document.getElementById("offlineModal").classList.add("hidden");
+        }
+
+        /* ==========================================================================
+           4. CALENDAR RENDERER & ELECTRIFIED AUTO-NEXT MONTH / YEAR progression
+           ========================================================================== */
+        function renderCalendar() {
+            const grid = document.getElementById("calendarGrid");
+            grid.innerHTML = "";
+
+            document.getElementById("currentMonthYear").textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+            document.getElementById("calendarYearSelect").textContent = viewYear;
+
+            const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+
+            let activeInCurrentMonth = 0;
+
+            // Previous Month Days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const dayNum = prevMonthDays - i;
+                const cell = document.createElement("div");
+                cell.className = "bg-cyber-dark/40 border border-cyber-border/30 rounded-xl p-2 min-h-[75px] flex flex-col justify-between opacity-30 cursor-not-allowed";
+                cell.innerHTML = `<span class="text-xs text-gray-500 font-bold">${dayNum}</span>`;
+                grid.appendChild(cell);
+            }
+
+            // Current Month Days
+            const today = new Date();
+            const isCurrentRealMonth = today.getFullYear() === viewYear && today.getMonth() === viewMonth;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isActive = !!state.activeDays[dateKey];
+                const isToday = isCurrentRealMonth && today.getDate() === day;
+
+                if (isActive) activeInCurrentMonth++;
+
+                const cell = document.createElement("div");
+                cell.id = `day-cell-${dateKey}`;
+                cell.dataset.datekey = dateKey;
+                
+                let baseClasses = "relative rounded-xl p-2 min-h-[75px] flex flex-col justify-between border transition-all duration-200 cursor-pointer select-none group overflow-hidden ";
+                
+                if (isActive) {
+                    baseClasses += "active-day-electric text-white ";
+                } else if (isToday) {
+                    baseClasses += "bg-cyber-dark border-cyan-400/80 text-cyan-300 shadow-md shadow-cyan-500/20 hover:border-yellow-400 ";
+                } else {
+                    baseClasses += "bg-cyber-dark border-cyber-border hover:border-cyan-400/70 hover:bg-gray-800/80 text-gray-200 ";
+                }
+
+                cell.className = baseClasses;
+                cell.onclick = (e) => toggleDayActivation(dateKey, e);
+
+                // HOVER EVENT: Speaks "I LOVE POLYGAMY!"
+                cell.onmouseenter = () => {
+                    if (isActive) {
+                        speakPhrase("I LOVE POLYGAMY!");
+                    }
+                };
+
+                cell.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="font-orbitron text-sm font-black ${isActive ? 'text-yellow-300 glow-text-gold' : 'text-gray-300'}">${day}</span>
+                        ${isToday ? '<span class="text-[9px] bg-cyan-500/30 text-cyan-300 px-1.5 py-0.5 rounded font-bold uppercase">Today</span>' : ''}
+                        ${isActive ? '<i class="fa-solid fa-bolt text-cyan-300 text-xs animate-bounce"></i>' : ''}
+                    </div>
+
+                    <div class="mt-1 text-right">
+                        ${isActive ? `
+                            <span class="text-[9px] font-orbitron font-bold text-yellow-300 block tracking-tighter animate-pulse">
+                                ⚡ GENERATING
+                            </span>
+                        ` : `
+                            <span class="text-[9px] text-gray-500 group-hover:text-cyan-300 transition block">
+                                +Click Day
+                            </span>
+                        `}
+                    </div>
+                `;
+
+                grid.appendChild(cell);
+            }
+
+            // Next Month Days Padding
+            const totalCellsSoFar = firstDay + daysInMonth;
+            const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
+            for (let i = 1; i <= remainingCells; i++) {
+                const cell = document.createElement("div");
+                cell.className = "bg-cyber-dark/40 border border-cyber-border/30 rounded-xl p-2 min-h-[75px] flex flex-col justify-between opacity-30 cursor-not-allowed";
+                cell.innerHTML = `<span class="text-xs text-gray-500 font-bold">${i}</span>`;
+                grid.appendChild(cell);
+            }
+
+            document.getElementById("monthActiveStats").textContent = `${activeInCurrentMonth}/${daysInMonth}`;
+            updateActiveCountUI();
+            renderProfilesUI();
+            renderBankLedger();
+        }
+
+        function toggleDayActivation(dateKey, clickEvent) {
+            initAudio();
+            if (state.activeDays[dateKey]) {
+                delete state.activeDays[dateKey];
+                delete state.timestamps[dateKey];
+                playSound('click');
+            } else {
+                state.activeDays[dateKey] = true;
+                state.timestamps[dateKey] = new Date().toLocaleString();
+                playSound('activate');
+                playSound('goldClink');
+                
+                const phrases = ["GOOD JOB!", "DELICIOUS!", "I LOVE GOLD!", "I LOVE ALL THE FOODS!", "I LOVE POLYGAMY!"];
+                const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+                speakPhrase(phrase, false);
+
+                if (clickEvent) {
+                    spawnFloatingTextOnElement(clickEvent.currentTarget, "⚡ LOCKED!", "#00f0ff");
+                }
+            }
+            saveState();
+            renderCalendar();
+
+            checkMonthCompletion();
+        }
+
+        function activateAllDaysInMonth() {
+            initAudio();
+            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            const stamp = new Date().toLocaleString();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                state.activeDays[dateKey] = true;
+                if (!state.timestamps[dateKey]) {
+                    state.timestamps[dateKey] = stamp;
+                }
+            }
+            saveState();
+            renderCalendar();
+
+            triggerElectrifiedMonthCompletion();
+        }
+
+        function checkMonthCompletion() {
+            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            let count = 0;
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (state.activeDays[dateKey]) count++;
+            }
+
+            if (count === daysInMonth) {
+                triggerElectrifiedMonthCompletion();
+            }
+        }
+
+        /* Trigger Electrified Flash Animation & Voice Transition to Next Month / Year */
+        function triggerElectrifiedMonthCompletion() {
+            playSound('shock');
+            speakPhrase("GOOD JOB! ELECTRIFIED SHOCK! NEXT MONTH!", true);
+
+            const container = document.getElementById("shockEffectContainer");
+            container.className = "shock-overlay";
+            setTimeout(() => {
+                container.className = "hidden";
+            }, 700);
+
+            if (viewYear > (state.maxCompletedYear || 2026)) {
+                state.maxCompletedYear = viewYear;
+            }
+
+            logMilestone(`⚡ ELECTRIFIED SHOCK! Completed 100% of ${MONTH_NAMES[viewMonth]} ${viewYear}! Auto-Transitioning...`);
+            triggerFireworks();
+
+            setTimeout(() => {
+                changeMonth(1);
+                updateHeaderTitleYear();
+            }, 400);
+        }
+
+        function clearCurrentMonthDays() {
+            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                delete state.activeDays[dateKey];
+                delete state.timestamps[dateKey];
+            }
+            playSound('click');
+            saveState();
+            renderCalendar();
+        }
+
+        function changeMonth(delta) {
+            viewMonth += delta;
+            if (viewMonth > 11) {
+                viewMonth = 0;
+                viewYear++;
+            } else if (viewMonth < 0) {
+                viewMonth = 11;
+                viewYear--;
+            }
+            playSound('click');
+            renderCalendar();
+            updateHeaderTitleYear();
+        }
+
+        function changeYear(delta) {
+            viewYear += delta;
+            playSound('click');
+            renderCalendar();
+            updateHeaderTitleYear();
+        }
+
+        function jumpToCurrent2026() {
+            viewYear = 2026;
+            viewMonth = 0;
+            playSound('click');
+            renderCalendar();
+            updateHeaderTitleYear();
+        }
+
+        function updateActiveCountUI() {
+            const totalActive = Object.keys(state.activeDays).length;
+            document.getElementById("activeDaysCount").textContent = `${totalActive} Days`;
+            
+            const mult = 1 + (totalActive * 0.15);
+            document.getElementById("globalMultDisplay").textContent = `${mult.toFixed(2)}x`;
+            document.getElementById("multiplierBadge").textContent = `${mult.toFixed(1)}x Speed`;
+        }
+
+        /* ==========================================================================
+           5. BANK LEDGER, TIME STAMPS & TRANSACTION HISTORY VIEW
+           ========================================================================== */
+        function switchView(view) {
+            playSound('click');
+            const calSec = document.getElementById("calendarViewSection");
+            const bankSec = document.getElementById("bankViewSection");
+            const calBtn = document.getElementById("tabCalendarBtn");
+            const bankBtn = document.getElementById("tabBankBtn");
+
+            if (view === 'calendar') {
+                calSec.classList.remove("hidden");
+                calSec.classList.add("flex");
+                bankSec.classList.add("hidden");
+                bankSec.classList.remove("flex");
+
+                calBtn.className = "px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-orbitron font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 transition flex items-center gap-2";
+                bankBtn.className = "px-4 py-2 bg-cyber-dark hover:bg-gray-800 text-cyan-400 border border-cyan-500/40 font-orbitron font-extrabold text-xs rounded-xl transition flex items-center gap-2";
+            } else {
+                bankSec.classList.remove("hidden");
+                bankSec.classList.add("flex");
+                calSec.classList.add("hidden");
+                calSec.classList.remove("flex");
+
+                bankBtn.className = "px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-orbitron font-extrabold text-xs rounded-xl shadow-lg hover:brightness-110 transition flex items-center gap-2";
+                calBtn.className = "px-4 py-2 bg-cyber-dark hover:bg-gray-800 text-yellow-400 border border-yellow-500/40 font-orbitron font-extrabold text-xs rounded-xl transition flex items-center gap-2";
+                
+                renderProfilesUI();
+                renderBankLedger();
+                speakPhrase("I LOVE POLYGAMY!");
+            }
+        }
+
+        function renderBankLedger() {
+            const list = document.getElementById("bankHistoryList");
+            const activeKeys = Object.keys(state.activeDays);
+
+            if (activeKeys.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-gray-500 italic">Walang active bank transaction logs sa profile na ito. I-click ang calendar days para mag-activate!</div>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            const sortedKeys = activeKeys.sort();
+
+            sortedKeys.forEach((key, idx) => {
+                const timeStamp = state.timestamps[key] || "Timestamp Active";
+
+                const item = document.createElement("div");
+                item.className = "bg-cyber-card border border-cyber-border/80 hover:border-yellow-400 p-3 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 transition cursor-pointer";
+                item.onmouseenter = () => speakPhrase("I LOVE POLYGAMY!");
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="px-2 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 font-orbitron font-bold rounded text-[10px]">
+                            NODE #${idx + 1}
+                        </span>
+                        <div>
+                            <span class="font-orbitron font-bold text-white text-sm">${key}</span>
+                            <span class="text-[10px] text-cyan-400 block">🕒 Time Stamp: ${timeStamp}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-[11px] font-orbitron text-gray-300">
+                        <span class="text-yellow-400">🥇 Golds: +15/s</span>
+                        <span class="text-emerald-400">🍎 Foods: +25/s</span>
+                        <span class="text-green-400">💵 Bills: +20/s</span>
+                        <span class="text-amber-300">🪙 Coins: +30/s</span>
+                        <span class="text-amber-400">🪙 Cents: +150/s</span>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        /* ==========================================================================
+           6. GENERATION ENGINE, VOICE CALLOUTS & FLOATING PARTICLES
+           ========================================================================== */
+        const TICK_INTERVAL = 50; 
+        let tickCounter = 0;
+
+        function startGenerationEngine() {
+            setInterval(() => {
+                gameTick();
+            }, TICK_INTERVAL);
+        }
+
+        function gameTick() {
+            const activeCount = Object.keys(state.activeDays).length;
+            if (activeCount === 0) {
+                updateUI(0);
+                return;
+            }
+
+            const mult = 1 + (activeCount * 0.15);
+            const rnd = Math.random;
+
+            const deltaCoins = Math.floor((rnd() * 5 + 1) * activeCount * mult);
+            const deltaCents = Math.floor((rnd() * 15 + 5) * activeCount * mult);
+            const deltaGolds = Math.floor((rnd() * 2 + 1) * activeCount * mult);
+            const deltaGems  = (rnd() > 0.4) ? Math.floor((rnd() * 1 + 1) * activeCount * mult) : 0;
+            const deltaFoods = Math.floor((rnd() * 4 + 1) * activeCount * mult);
+            const deltaBills = Math.floor((rnd() * 3 + 1) * activeCount * mult);
+
+            state.resources.coins += deltaCoins;
+            state.resources.cents += deltaCents;
+            state.resources.golds += deltaGolds;
+            state.resources.gems  += deltaGems;
+            state.resources.foods += deltaFoods;
+            state.resources.bills += deltaBills;
+
+            const tickValue = (deltaCoins * 1.5) + (deltaCents * 0.01) + (deltaGolds * 10) + (deltaGems * 25) + (deltaFoods * 2) + (deltaBills * 5);
+            state.totalEarned += tickValue;
+
+            tickCounter++;
+
+            if (tickCounter % 20 === 0) {
+                saveState();
+                spawnFloaterOnActiveDayTile();
+            }
+
+            checkMilestones();
+            updateUI(tickValue * 20);
+        }
+
+        /* Spawn resource text floaters & AI Voice Callouts over active calendar day tiles */
+        function spawnFloaterOnActiveDayTile() {
+            const activeTileElements = document.querySelectorAll(".active-day-electric");
+            if (activeTileElements.length === 0) return;
+
+            const pickCount = Math.min(activeTileElements.length, Math.floor(Math.random() * 3) + 1);
+            
+            for (let i = 0; i < pickCount; i++) {
+                const randomTile = activeTileElements[Math.floor(Math.random() * activeTileElements.length)];
+                
+                const items = [
+                    { text: "🥇 +Gold!", color: "#FFD700", type: "gold" },
+                    { text: "💎 +Gem!", color: "#06b6d4", type: "gem" },
+                    { text: "💵 +Bill!", color: "#10b981", type: "bill" },
+                    { text: "🪙 +Coins!", color: "#f59e0b", type: "coin" },
+                    { text: "🍎 +Food!", color: "#34d399", type: "food" }
+                ];
+                const item = items[Math.floor(Math.random() * items.length)];
+
+                if (item.type === 'gold' || item.type === 'coin') playSound('goldClink');
+                if (item.type === 'food') playSound('foodCrunch');
+
+                spawnFloatingTextOnElement(randomTile, item.text, item.color);
+            }
+
+            const voiceChance = Math.random();
+            if (voiceChance < 0.12) {
+                const phrases = [
+                    "GOOD JOB!",
+                    "DELICIOUS!",
+                    "I LOVE GOLD!",
+                    "I LOVE ALL THE FOODS!",
+                    "I LOVE POLYGAMY!"
+                ];
+                const chosenPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+                speakPhrase(chosenPhrase);
+            }
+        }
+
+        function spawnFloatingTextOnElement(element, text, color) {
+            if (!element) return;
+            const rect = element.getBoundingClientRect();
+            
+            const el = document.createElement("div");
+            el.className = "floating-num";
+            el.style.left = `${rect.left + rect.width / 2 - 25 + (Math.random() * 20 - 10)}px`;
+            el.style.top = `${rect.top + rect.height / 2 - 10}px`;
+            el.style.color = color;
+            el.textContent = text;
+            
+            document.body.appendChild(el);
+
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 1300);
+        }
+
+        /* ==========================================================================
+           7. UI UPDATER & MILESTONE TRACKER
+           ========================================================================== */
+        function formatNumber(num) {
+            if (num < 1000) return num.toFixed(0);
+            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Centillion"];
+            const i = Math.floor(Math.log10(num) / 3);
+            if (i >= suffixes.length) {
+                return num.toExponential(2);
+            }
+            const formatted = (num / Math.pow(10, i * 3)).toFixed(2);
+            return `${formatted} ${suffixes[i]}`;
+        }
+
+        function updateUI(ratePerSec) {
+            document.getElementById("val-coins").textContent = formatNumber(state.resources.coins);
+            document.getElementById("val-cents").textContent = formatNumber(state.resources.cents);
+            document.getElementById("val-golds").textContent = formatNumber(state.resources.golds);
+            document.getElementById("val-gems").textContent = formatNumber(state.resources.gems);
+            document.getElementById("val-foods").textContent = formatNumber(state.resources.foods);
+            document.getElementById("val-bills").textContent = formatNumber(state.resources.bills);
+
+            const activeCount = Object.keys(state.activeDays).length;
+            const mult = 1 + (activeCount * 0.15);
+            document.getElementById("coinsPerSec").textContent = `+${formatNumber(30 * activeCount * mult)}/s`;
+            document.getElementById("centsPerSec").textContent = `+${formatNumber(150 * activeCount * mult)}/s`;
+            document.getElementById("goldsPerSec").textContent = `+${formatNumber(15 * activeCount * mult)}/s`;
+            document.getElementById("gemsPerSec").textContent = `+${formatNumber(8 * activeCount * mult)}/s`;
+            document.getElementById("foodsPerSec").textContent = `+${formatNumber(25 * activeCount * mult)}/s`;
+            document.getElementById("billsPerSec").textContent = `+${formatNumber(20 * activeCount * mult)}/s`;
+
+            document.getElementById("grandTotalDisplay").textContent = `$${formatNumber(state.totalEarned)}`;
+            document.getElementById("ratePerSecDisplay").textContent = `+${formatNumber(ratePerSec)} /sec`;
+        }
+
+        function checkMilestones() {
+            const currentTotal = state.totalEarned;
+            let currentIdx = state.milestoneIndex;
+
+            while (currentIdx < MILESTONES.length && currentTotal >= MILESTONES[currentIdx].target) {
+                const milestone = MILESTONES[currentIdx];
+                logMilestone(`🎉 MILESTONE UNLOCKED! Level: ${milestone.name} ($${formatNumber(milestone.target)})!`);
+                
+                triggerFireworks();
+                playSound('milestone');
+                speakPhrase(`GOOD JOB! REORDERING MILESTONE TO ${milestone.name}! I LOVE GOLD!`, true);
+                
+                currentIdx++;
+                state.milestoneIndex = currentIdx;
+            }
+
+            const nextMilestone = MILESTONES[state.milestoneIndex] || MILESTONES[MILESTONES.length - 1];
+            const prevTarget = state.milestoneIndex > 0 ? MILESTONES[state.milestoneIndex - 1].target : 0;
+            const progress = Math.min(100, Math.max(0, ((currentTotal - prevTarget) / (nextMilestone.target - prevTarget)) * 100));
+
+            document.getElementById("milestoneName").textContent = nextMilestone.name;
+            document.getElementById("nextMilestoneTarget").textContent = `$${formatNumber(nextMilestone.target)}`;
+            document.getElementById("milestoneProgressBar").style.width = `${progress}%`;
+        }
+
+        function logMilestone(msg) {
+            const logContainer = document.getElementById("milestoneLog");
+            const entry = document.createElement("div");
+            entry.className = "text-yellow-300 font-semibold flex items-start gap-1 text-[11px] border-b border-cyber-border/40 pb-1";
+            entry.innerHTML = `<span class="text-cyan-400 font-bold">[${new Date().toLocaleTimeString()}]</span> <span>${msg}</span>`;
+            logContainer.prepend(entry);
+
+            if (logContainer.children.length > 25) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        /* ==========================================================================
+           8. FIREWORKS CANVAS ANIMATION ENGINE
+           ========================================================================== */
+        const canvas = document.getElementById("fireworksCanvas");
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 9 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.015;
+                this.size = Math.random() * 4 + 2;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.08;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function triggerFireworks() {
+            const colors = ['#FFD700', '#06b6d4', '#10b981', '#ec4899', '#f59e0b', '#a855f7', '#ffffff'];
+            const burstCount = 6;
+
+            for (let b = 0; b < burstCount; b++) {
+                setTimeout(() => {
+                    const rx = Math.random() * (canvas.width * 0.8) + canvas.width * 0.1;
+                    const ry = Math.random() * (canvas.height * 0.5) + canvas.height * 0.1;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    for (let i = 0; i < 65; i++) {
+                        particles.push(new Particle(rx, ry, color));
+                    }
+                }, b * 180);
+            }
+        }
+
+        function animateFireworks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animateFireworks);
+        }
+
+        /* ==========================================================================
+           9. REAL-TIME LIVE CLOCK
+           ========================================================================== */
+        function updateLiveClock() {
+            const now = new Date();
+
+            const dateStr = now.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric'
+            });
+
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            const ms = String(now.getMilliseconds()).padStart(3, '0');
+
+            document.getElementById("liveDate").textContent = dateStr;
+            document.getElementById("liveTime").innerHTML = `${hrs}:${mins}:${secs}.<span id="liveMs" class="text-xs text-cyan-400">${ms}</span>`;
+
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const pastDaysOfYear = (now - startOfYear) / 86400000;
+            const weekNum = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+            
+            document.getElementById("liveWeek").textContent = weekNum;
+            document.getElementById("liveYear").textContent = now.getFullYear();
+
+            requestAnimationFrame(updateLiveClock);
+        }
+
+        /* ==========================================================================
+           10. APP INITIALIZATION
+           ========================================================================== */
+        window.onload = function() {
+            loadState();
+            renderCalendar();
+            renderProfilesUI();
+            startGenerationEngine();
+            animateFireworks();
+            updateLiveClock();
+
+            if (speechSynth) {
+                speechSynth.getVoices();
+            }
+
+            if (Object.keys(state.activeDays).length === 0) {
+                logMilestone("⭐ Ready! Select calendar dates to activate non-stop electrified gold & AI voice generation!");
+            }
+        };
+    </script>
+</body>
+</html>
